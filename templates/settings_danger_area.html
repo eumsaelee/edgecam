@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8">
+    <style>
+      #streamCanvas {
+        border: 1px solid black;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="streamCanvas" width="640" height="360"></canvas>
+    <button id="updateButton">Update</button>
+    <script>
+      const canvas = document.getElementById('streamCanvas');
+      const button = document.getElementById('updateButton');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+
+      let dots = [];
+      let selectedDotIndex = -1;
+      let dragging = false;
+
+      img.onload = function () {
+        canvas.width = img.width;
+        canvas.height = img.height;
+        updateCanvas();
+      };
+      img.src = "{{ url_for('danger_area') }}";
+
+      canvas.addEventListener('mousedown', function(e) {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        // selectedDotIndex = dots.findIndex(dot => Math.sqrt(Math.pow(dot.x - x, 2) + Math.pow(dot.y - y, 2)) < 5);
+        selectedDotIndex = dots.findIndex(dot => Math.sqrt(Math.pow(dot[0] - x, 2) + Math.pow(dot[1] - y, 2)) < 5);
+        if (selectedDotIndex === -1) {
+          // const newDot = { x, y };
+          // dots.push(newDot);
+          dots.push([x, y]);
+        } else {
+          dragging = true;
+        }
+      });
+
+      canvas.addEventListener('mousemove', function(e) {
+        const rect = canvas.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        let onDot = false;
+        // dots.forEach(dot => {
+          // const distance = Math.sqrt(Math.pow(dot.x - x, 2) + Math.pow(dot.y - y, 2));
+        dots.forEach((dot, index) => {
+          const distance = Math.sqrt(Math.pow(dot[0] - x, 2) + Math.pow(dot[1] - y, 2));
+          if (distance < 5) {
+            onDot = true;
+          }
+        });
+        if (dragging && selectedDotIndex !== -1) {
+          const rect = canvas.getBoundingClientRect();
+          // dots[selectedDotIndex].x = e.clientX - rect.left;
+          dots[selectedDotIndex][0] = e.clientX - rect.left;
+          // dots[selectedDotIndex].y = e.clientY - rect.top;
+          dots[selectedDotIndex][1] = e.clientY - rect.top;
+        }
+        canvas.style.cursor = onDot ? 'crosshair' : 'default';
+      });
+
+      canvas.addEventListener('mouseup', function(e) {
+        dragging = false;
+      });
+
+      button.addEventListener('click', function(e) {
+        sendCoords();
+      });
+
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Delete' && selectedDotIndex !== -1) {
+          dots.splice(selectedDotIndex, 1);
+          selectedDotIndex = -1;
+          // sendCoords();
+        }
+      });
+
+      function updateCanvas() {
+        requestAnimationFrame(updateCanvas);
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        dots.forEach((dot, index) => {
+          if (index > 0) {
+            ctx.beginPath();
+            // ctx.moveTo(dots[index - 1].x, dots[index - 1].y);
+            ctx.moveTo(dots[index - 1][0], dots[index - 1][1]);
+            // ctx.lineTo(dot.x, dot.y);
+            ctx.lineTo(dot[0], dot[1]);
+            ctx.strokeStyle = 'red';
+            ctx.stroke();
+          }
+          ctx.fillStyle = 'red';
+          ctx.beginPath();
+          // ctx.arc(dot.x, dot.y, 5, 0, 2 * Math.PI);
+          ctx.arc(dot[0], dot[1], 5, 0, 2 * Math.PI);
+          ctx.fill();
+        });
+        if (dots.length > 2) {
+          ctx.beginPath();
+          // ctx.moveTo(dots[dots.length - 1].x, dots[dots.length - 1].y);
+          ctx.moveTo(dots[dots.length - 1][0], dots[dots.length - 1][1]);
+          // ctx.lineTo(dots[0].x, dots[0].y);
+          ctx.lineTo(dots[0][0], dots[0][1]);
+          ctx.strokeStyle = 'red';
+          ctx.stroke();
+        }
+      }
+
+      function sendCoords() {
+        fetch('/update/view/danger_area', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ dots })
+        }).then(response => response.json())
+          .then(data => console.log(data));
+      }
+    </script>
+  </body>
+</html>
