@@ -162,9 +162,9 @@ def init():
 
 def halt():
     logger.debug('called halt().')
-    for bufferer in [_FRAME_BUFFERER,
-                     _YOLOV8N_PREDS_BUFFERER,
-                     _YOLOV8NPOSE_PREDS_BUFFERER]:
+    for bufferer in [_YOLOV8N_PREDS_BUFFERER,
+                     _YOLOV8NPOSE_PREDS_BUFFERER,
+                     _FRAME_BUFFERER]:
         try:
             bufferer.stop()
         except NotRunning:
