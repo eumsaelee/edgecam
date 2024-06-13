@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-time Video Stream</title>
+</head>
+<body>
+    <h1>Live Video Stream</h1>
+    <img id="videoFrame" src="">
+    <script>
+        const img = document.getElementById('videoFrame');
+        const ws = new WebSocket('ws://localhost:8000/ws/stream');
+        ws.binaryType = 'blob';
+
+        ws.onmessage = function(event) {
+            const url = URL.createObjectURL(event.data);
+            img.src = url;
+        };
+
+        ws.onerror = function(event) {
+            console.error("WebSocket error observed:", event);
+        };
+
+        window.addEventListener('beforeunload', () => {
+            if (ws.readyState === WebSocket.OPEN) {
+                ws.close(1000, "Client closed connection");
+            }
+        });
+
+        ws.onclose = function(event) {
+            if (!event.wasClean) {
+                console.error(`WebSocket close with error: ${event.reason}`);
+            } else {
+                console.log('WebSocket closed cleanly');
+            }
+        };
+    </script>
+</body>
+</html>
