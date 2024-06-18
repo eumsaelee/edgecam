@@ -10,30 +10,53 @@ from queue import Full, Empty
 
 
 class InvalidBufferSize(Exception):
-    """ 유효하지 않은 버퍼 사이즈 """
+    """
+    자연수가 아닌 값이 큐 최대 사이즈로 입력되었을 때 발생하는 예외.
+    """
     def __init__(self):
         super().__init__(f'`maxsize` must be a positive integer.')
 
 
 class PushQueue:
     """
-    밀어내기 큐
+    밀어내기 큐.
 
-    이 클래스는 파이썬 표준 큐인 queue.Queue 클래스의 설계를 참고하여 작성하였다.
-    사용 방법은 유사하나 완벽히 호환되지 않으므로 필요하다면 덕타이핑 또는 작은 수정을 거쳐야 한다.
-    표준 큐와 다른 사항을 아래에 나열하였다.
+    이 클래스는 파이썬 표준 큐인 queue.Queue 클래스의 설계를 바탕으로 작성되었다.
+    사용 방법은 유사하나 완벽하게 호환되지 않으므로 유의해야 한다.
 
-    [추가된 기능]
-    - 큐 최대 크기를 런타임에 동적으로 변경할 수 있다. 단, 크기가 작아질 경우 아이템 손실이 발생한다.
-    - 밀어내기를 통해 자동으로 가장 오래된 아이템을 삭제하고 새 아이템을 삽입할 수 있다.
-    - 플러시를 통해 큐에 존재하는 모든 아이템들을 삭제할 수 있다.
+    Attributes
+    ----------
+    _maxsize : int
+        큐의 최대 크기. 0보다 큰 양의 정수.
+    _queue : deque
+        아이템 입출력이 발생하는 실제 큐.
+    _mutex : threading.Lock
+        경쟁 방지를 위한 스레딩 락.
+    _not_empty : threading.Condition
+        아이템을 대기 중인 스레드들에게 큐가 비어있지 않음을 알리기 위한 스레딩 컨디션.
+    _not_full : threading.Condition
+        아이템 입력을 대기 중인 스레드들에게 큐가 가득 차지 않았음을 알리기 위한 스레딩 컨디션.
 
-    [제한된 기능]
+    Additional features
+    -------------------
+    - 큐 최대 크기를 런타임에 변경할 수 있다. 단, 크기가 작아질 경우 아이템 손실이 발생한다.
+    - 자동으로 가장 오래된 아이템을 삭제하고 새 아이템을 삽입할 수 있는 '푸시'를 제공한다.
+    - 큐에 존재하는 모든 아이템들을 삭제할 수 있는 '플러시'를 제공한다.
+
+    Restricted features
+    -------------------
     - 큐 최대 크기를 무한(maxsize=0)으로 지정할 수 없다. 반드시 0보다 큰 정수이어야 한다.
-    - 경량화를 위해 unfinished_task와 관련된 모든 필드 및 메소드를 제거하였다.
+    - 경량화를 위해 unfinished_task와 관련된 모든 속성 및 메소드를 제거하였다.
     """
 
     def __init__(self, maxsize: int=1) -> None:
+        """ 큐 초기화.
+
+        Parameters
+        ----------
+        maxsize : int, optional
+            큐의 최대 크기. 반드시 0보다 큰 양의 정수이어야 한다. 기본 값은 1.
+        """
         self._maxsize = self._inspect(maxsize)
         self._queue = deque()
         self._mutex = threading.Lock()
@@ -42,13 +65,26 @@ class PushQueue:
 
     @property
     def maxsize(self) -> int:
+        """ 프로퍼티. 큐의 최대 크기를 반환한다.
+
+        Returns
+        -------
+        int
+            _description_
+        """
         return self._maxsize
 
     @maxsize.setter
-    def maxsize(self, maxsize) -> None:
-        """
-        큐 최대 크기를 변경한다. 이 값은 0보다 큰 정수이어야 한다.
-        원래 사이즈보다 작은 사이즈가 입력될 경우 그 차이만큼 아이템이 손실된다.
+    def maxsize(self, maxsize: int) -> None:
+        """ 프로퍼티-세터. 큐의 최대 크기를 변경한다.
+
+        입력된 maxsize가 기존의 그것보다 작을 경우 그 차이만큼 가장 오래된 아이템 순서로
+        제거된다.
+        
+        Parameters
+        ----------
+        maxsize : int
+            
         """
         new = self._inspect(maxsize)
         old = self._maxsize
