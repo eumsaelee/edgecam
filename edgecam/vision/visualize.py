@@ -1,17 +1,18 @@
 # -*- coding: utf-8 -*-
 # Author: Seunghyeon Kim
 
+# 코드를 전반적으로 다듬어야 함.
+
 import os
 import enum
 import typing
 import pathlib
 
-import cv2
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
 
-_DIR = str(pathlib.Path(__file__).parents[4].absolute()/'static/fonts')
+_DIR = str(pathlib.Path(__file__).parents[3].absolute()/'static/fonts')
 
 
 class NanumGothic(enum.Enum):
@@ -57,9 +58,9 @@ def plot_text(img: np.ndarray,
     img_pil = Image.fromarray(img)
     font = ImageFont.truetype(font_path, font_size)
     draw = ImageDraw.Draw(img_pil)
-    text_width, text_height = draw.textsize(text, font=font)
-    background_area = [org[0], org[1], org[0] + text_width, org[1] + text_height]
-    draw.rectangle(background_area, fill=bgcolor)
+    # text_width, text_height = draw.textsize(text, font=font)
+    # background_area = [org[0], org[1], org[0] + text_width, org[1] + text_height]
+    # draw.rectangle(background_area, fill=bgcolor)
     draw.text(org, text, color, font)
     img = np.array(img_pil)
     return img

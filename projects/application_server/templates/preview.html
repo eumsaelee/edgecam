@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Real-time Video Stream</title>
+    <title>Preview</title>
 </head>
 <body>
-    <h1>Live Video Stream</h1>
+    <h1>Preview</h1>
     <img id="videoFrame" src="">
     <script>
         const img = document.getElementById('videoFrame');
-        const ws = new WebSocket('ws://localhost:8000/ws/stream');
+        const ws = new WebSocket('ws://127.0.0.1:8888/stream/object_detection');
         ws.binaryType = 'blob';
 
         ws.onmessage = function(event) {
