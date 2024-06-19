@@ -1,33 +1,28 @@
 # -*- coding: utf-8 -*-
 # Author: Seunghyeon Kim
 
-# 코드를 전반적으로 다듬어야 함.
+import sys
+from configs import EDGECAM_DIR
+sys.path.append(EDGECAM_DIR)
 
 import os
 import enum
 import typing
-import pathlib
 
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
-
-_DIR = str(pathlib.Path(__file__).parents[3].absolute()/'static/fonts')
+from configs import FONTS_DIR
 
 
 class NanumGothic(enum.Enum):
 
-    default = os.path.join(_DIR, 'NanumGothic.ttf')
-    light = os.path.join(_DIR, 'NanumGothicLight.ttf')
-    bold = os.path.join(_DIR, 'NanumGothicBold.ttf')
-    extra_bold = os.path.join(_DIR, 'NanumGothicExtraBold.ttf')
+    default = os.path.join(FONTS_DIR, 'NanumGothic.ttf')
+    light = os.path.join(FONTS_DIR, 'NanumGothicLight.ttf')
+    bold = os.path.join(FONTS_DIR, 'NanumGothicBold.ttf')
+    extra_bold = os.path.join(FONTS_DIR, 'NanumGothicExtraBold.ttf')
 
 
-DEFAULT_FONT = ImageFont.truetype(NanumGothic.bold.value, 20)
-
-
-# NOTE: temporary unused.
-# -----
 # def plot_text(
 #     img: np.ndarray,
 #     text: str,
@@ -58,9 +53,8 @@ def plot_text(img: np.ndarray,
     img_pil = Image.fromarray(img)
     font = ImageFont.truetype(font_path, font_size)
     draw = ImageDraw.Draw(img_pil)
-    # text_width, text_height = draw.textsize(text, font=font)
-    # background_area = [org[0], org[1], org[0] + text_width, org[1] + text_height]
-    # draw.rectangle(background_area, fill=bgcolor)
+    textbbox = draw.textbbox((org[0], org[1]-1), text, font=font)  # left, top, light, bottom
+    draw.rectangle(textbbox, fill=bgcolor)
     draw.text(org, text, color, font)
     img = np.array(img_pil)
     return img

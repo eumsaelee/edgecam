@@ -1,13 +1,9 @@
 # -*- coding: utf-8 -*-
 # Author: Seunghyeon Kim
 
-# 정상적으로 작동하지만 코드 검증이 아직 이루어지지 않음.
-# 클래스 이름이 하드코딩되어 있음.
-
 import sys
-from pathlib import Path
-BASEDIR = Path(__file__).parents[3].absolute()
-sys.path.append(str(BASEDIR))
+from configs import EDGECAM_DIR
+sys.path.append(EDGECAM_DIR)
 
 import typing
 import websockets
@@ -16,7 +12,7 @@ import numpy as np
 from loguru import logger
 
 from edgecam.utils.buffers import AsyncPushQueue
-from edgecam.utils.tasks import SingleAsyncTask, AlreadyRunning, NotRunning
+from edgecam.utils.tasks import SingleAsyncTask, TaskError
 from edgecam.vision.serialize import deserialize
 
 
@@ -66,14 +62,14 @@ class ReceptionHandler:
     async def start_reception(self) -> None:
         try:
             await self._task.start()
-        except AlreadyRunning:
+        except TaskError:
             logger.exception(
                 'Reception task already running.')
 
     async def stop_reception(self) -> None:
         try:
             await self._task.stop()
-        except NotRunning:
+        except TaskError:
             logger.exception(
                 'Reception task is not running.')
 

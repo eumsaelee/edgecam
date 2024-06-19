@@ -1,15 +1,7 @@
 # -*- coding: utf-8 -*-
 # Author: Seunghyeon Kim
 
-class InvalidStepSize(Exception):
-    """ 유효하지 않은 스텝 사이즈 """
-    def __init__(self):
-        super().__init__(
-            f'`stepsize` must be a positive interger greater than 1.')
-
-
 class StepSkipper:
-    """ 일정 주기를 기준으로 스킵 여부를 판단하는 스킵퍼 """
 
     def __init__(self, stepsize: int) -> None:
         self._stepsize = self._inspect(stepsize)
@@ -36,4 +28,5 @@ class StepSkipper:
     def _inspect(stepsize: int) -> int:
         if isinstance(stepsize, int) and stepsize > 1:
             return stepsize
-        raise InvalidStepSize
+        raise ValueError(
+            f'`stepsize` must be a positive interger greater than 1.')

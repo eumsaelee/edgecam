@@ -2,9 +2,8 @@
 # Author: Seunghyeon Kim
 
 import sys
-from pathlib import Path
-BASEDIR = Path(__file__).parents[3].absolute()
-sys.path.append(str(BASEDIR))
+from configs import EDGECAM_DIR
+sys.path.append(EDGECAM_DIR)
 
 import typing
 import threading
@@ -12,9 +11,9 @@ import threading
 import numpy as np
 from loguru import logger
 
-from edgecam.vision.models import Yolo
+from edgecam.vision.models import Yolov8
 from edgecam.utils.buffers import PushQueue
-from edgecam.utils.tasks import SingleThreadTask, AlreadyRunning, NotRunning
+from edgecam.utils.tasks import SingleThreadTask, TaskError
 
 
 Callback = typing.Callable[[typing.Optional[float]], np.ndarray]
@@ -25,7 +24,7 @@ Output = typing.Tuple[Frame, Preds]
 
 class ObjectDetectionTask(SingleThreadTask):
 
-    def __init__(self, model: Yolo, buf: PushQueue) -> None:
+    def __init__(self, model: Yolov8, buf: PushQueue) -> None:
         self._model = model
         self._buf = buf
         super().__init__()
@@ -56,7 +55,7 @@ class ObjectDetectionTask(SingleThreadTask):
 class ObjectDetectionHandler:
 
     def __init__(self, model_name: str, maxsize: int=10) -> None:
-        self._model = Yolo(model_name)
+        self._model = Yolov8(model_name)
         self._buf = PushQueue(maxsize)
         self._task = ObjectDetectionTask(self._model, self._buf)
 
@@ -66,14 +65,14 @@ class ObjectDetectionHandler:
     def start_detection(self, callback: Callback) -> None:
         try:
             self._task.start(callback)
-        except AlreadyRunning:
+        except TaskError:
             logger.warning(
                 'Object detection thread is already running.')
 
     def stop_detection(self) -> None:
         try:
             self._task.stop()
-        except NotRunning:
+        except TaskError:
             logger.warning(
                 'Object detection thread is not running.')
 

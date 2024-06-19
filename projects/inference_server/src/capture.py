@@ -2,9 +2,8 @@
 # Author: Seunghyeon Kim
 
 import sys
-from pathlib import Path
-BASEDIR = Path(__file__).parents[3].absolute()
-sys.path.append(str(BASEDIR))
+from configs import EDGECAM_DIR
+sys.path.append(EDGECAM_DIR)
 
 import typing
 import threading
@@ -14,7 +13,7 @@ import numpy as np
 from loguru import logger
 
 from edgecam.utils.buffers import PushQueue
-from edgecam.utils.tasks import SingleThreadTask, AlreadyRunning, NotRunning
+from edgecam.utils.tasks import SingleThreadTask, TaskError
 
 
 Source = typing.Union[int, str]
@@ -24,7 +23,7 @@ class VideoCapture:
 
     def __init__(self,
                  source: Source=None,
-                 api_pref: int=cv2.CAP_FFMPEG) -> None:
+                 api_pref: int=cv2.CAP_ANY) -> None:
         self.mutex = threading.Lock()
         self._cap = cv2.VideoCapture()
         self._cap.setExceptionMode(enable=True)
@@ -33,7 +32,7 @@ class VideoCapture:
 
     def open(self,
              source: Source,
-             api_pref: int=cv2.CAP_FFMPEG) -> None:
+             api_pref: int=cv2.CAP_ANY) -> None:
         with self.mutex:
             self._cap.open(source, api_pref)
 
@@ -74,7 +73,7 @@ class VideoCaptureHandler:
 
     def __init__(self,
                  source: Source,
-                 api_pref: int=cv2.CAP_FFMPEG,
+                 api_pref: int=cv2.CAP_ANY,
                  maxsize: int=10) -> None:
         self._cap = VideoCapture(source, api_pref)
         self._buf = PushQueue(maxsize)
@@ -82,7 +81,7 @@ class VideoCaptureHandler:
 
     def change_source(self,
                       source: Source,
-                      api_pref: int=cv2.CAP_FFMPEG) -> None:
+                      api_pref: int=cv2.CAP_ANY) -> None:
         self._cap.open(source, api_pref)
 
     def change_maxsize(self, maxsize: int) -> None:
@@ -91,14 +90,14 @@ class VideoCaptureHandler:
     def start_capturing(self) -> None:
         try:
             self._task.start()
-        except AlreadyRunning:
+        except TaskError:
             logger.warning(
                 'Video capture thread is already running.')
 
     def stop_capturing(self) -> None:
         try:
             self._task.stop()
-        except NotRunning:
+        except TaskError:
             logger.warning(
                 'Video capture thread is not running.')
 

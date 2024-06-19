@@ -14,13 +14,10 @@ Preds = typing.Dict[str, np.ndarray]
 
 
 class EncodeError(Exception):
-    """ 이미지를 지정된 포맷으로 인코딩 실패하였을 때 """
-    def __init__(self, ext: str):
-        super().__init__(f'Failed to encode the image to {ext}.')
+    pass
 
 
 def serialize(frame: Frame, preds: Preds, ext: str='.jpg') -> bytes:
-    """ ? """
     payload = Payload()
     payload.frame = numpy_to_bytes(frame, ext)
     for name, array in preds.items():
@@ -31,7 +28,6 @@ def serialize(frame: Frame, preds: Preds, ext: str='.jpg') -> bytes:
 
 
 def deserialize(blob: bytes) -> typing.Tuple[Frame, Preds]:
-    """ ? """
     payload = Payload()
     payload.ParseFromString(blob)
     frame = payload.frame
@@ -45,12 +41,10 @@ def deserialize(blob: bytes) -> typing.Tuple[Frame, Preds]:
     return frame, preds
 
 
-# NOTE 위치를 변경해야 할 수도 있음. 이 모듈과 성격이 조금 다름.
 def numpy_to_bytes(frame: np.ndarray, ext: str='.jpg') -> bytes:
-    """ ? """
     retval, buffer = cv2.imencode(ext, frame)
     if not retval:
-        raise RuntimeError(
+        raise EncodeError(
             f'Failed to encode the image to {ext}.')
     buffer = buffer.tobytes()
     return buffer

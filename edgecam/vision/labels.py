@@ -169,7 +169,6 @@ yolo_categories_kor = {
 }
 
 
-# YOLO는 ver.8부터 자세 추정을 지원하기 시작함
 yolov8_keypoints_eng = {
     0: 'Nose',
     1: 'Left eye',
