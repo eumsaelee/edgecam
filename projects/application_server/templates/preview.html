@@ -7,12 +7,15 @@ Preview
 {% block content %}
 <h2>Preview to testing streaming.</h2>
 <img id='video_frame' src=''>
+<label>
+    <input type='checkbox' id='resize_toggle'> Resize to 320x160
+</label>
 {% endblock %}
 
 {% block scripts %}
 <script>
     const img = document.getElementById('video_frame');
-    const ws = new WebSocket('ws://127.0.0.1:8888/stream/object_detection');
+    const ws = new WebSocket('ws://127.0.0.1:8001/inference/det');
     ws.binaryType = 'blob';
 
     // 프레임 이미지를 갱신한다.
@@ -40,5 +43,12 @@ Preview
             console.log('websocket closed cleanly.')
         }
     };
+
+    const chk = document.getElementById('resize_toggle');
+    chk.addEventListener('change', () => {
+        ws.send(JSON.stringify(
+            {resize: chk.checked}
+        ));
+    });
 </script>
 {% endblock %}

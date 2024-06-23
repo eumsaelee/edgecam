@@ -15,8 +15,10 @@ sys.path.append(EDGECAM_DIR)
 from edgecam.vision.models import Yolov8, Yolov8Pose
 
 
-# 1. 디렉토리 경로 관련 항목들
-# ----------------------
+# --------------
+# 디렉토리 경로 관련
+# --------------
+#
 # 프로젝트 `application_server`의 루트 디렉토리 경로. 리소스 접근을
 # 위해 필요한 경우가 있다.
 BASE_DIR = str(Path(__file__).parent.absolute())
@@ -26,14 +28,14 @@ BASE_DIR = str(Path(__file__).parent.absolute())
 FONTS_DIR = os.path.join(BASE_DIR, 'resources/fonts')
 
 
-# 2. 추론 및 딥러닝 모델 관련 항목들
-# ---------------------------
-# 서비스 가능한 모델의 이름과 타입을 담은 사전 객체. 만약 새로운 모델을
-# 추가하였다면, 이 항목에도 추가해 주어야 한다.
+# -------------------
+# 추론 및 딥러닝 모델 관련
+# -------------------
+#
+# 서비스 가능한 모델의 이름과 참조 타입을 추가
 MODELS = {
     'yolov8': Yolov8,
-    'yolov8-pose': Yolov8Pose,
-}
+    'yolov8-pose': Yolov8Pose,}
 #
 # 서비스 가능한 모델이 사용할 가중치 파일 목록을 담은 사전 객체. 마찬가지로
 # 새로운 모델을 추가하였다면, 이 항목에서 추가해 주어야 한다.

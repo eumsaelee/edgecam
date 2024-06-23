@@ -13,98 +13,56 @@ import numpy as np
 from loguru import logger
 
 from edgecam.utils.buffers import PushQueue
-from edgecam.utils.tasks import SingleThreadTask, TaskError
-
-
-Source = typing.Union[int, str]
 
 
 class VideoCapture:
 
     def __init__(self,
-                 source: Source=None,
-                 api_pref: int=cv2.CAP_ANY) -> None:
+                 source: typing.Union[int, str]=None,
+                 api_pref: int=cv2.CAP_ANY,
+                 maxsize: int=1):
         self.mutex = threading.Lock()
+        self._buf = PushQueue(maxsize)
+        self._th: threading.Thread=None
+        self._stop_th = False
         self._cap = cv2.VideoCapture()
         self._cap.setExceptionMode(enable=True)
         if source is not None:
             self.open(source, api_pref)
 
     def open(self,
-             source: Source,
-             api_pref: int=cv2.CAP_ANY) -> None:
+             source: typing.Union[int, str],
+             api_pref: int=cv2.CAP_ANY):
         with self.mutex:
             self._cap.open(source, api_pref)
+        if not self._th or not self._th.is_alive():
+            if self._stop_th:
+                self._stop_th = False
+            self._buf.flush()
+            self._th = threading.Thread(target=self._buffer)
+            self._th.start()
 
-    def release(self) -> None:
-        with self.mutex:
-            self._cap.release()
-
-    def read(self) -> np.ndarray:
-        with self.mutex:
-            _, frame = self._cap.read()
-            return frame
-
-
-class VideoCaptureTask(SingleThreadTask):
-
-    def __init__(self, cap: VideoCapture, buf: PushQueue) -> None:
-        self._cap = cap
-        self._buf = buf
-        super().__init__()
-
-    def _start(self) -> None:
+    def _buffer(self):
         try:
-            while not self._stop_task:
-                frame = self._cap.read()
+            while not self._stop_th:
+                _, frame = self._cap.read()
                 self._buf.push(frame)
         except:
-            logger.exception('Task has been aborted.')
+            logger.exception('Aborted.')
         finally:
-            if not self._stop_task:
-                self._stop_task = True
-                self._stop()
+            if not self._stop_th:
+                self._stop_th = True
 
-    def _stop(self) -> None:
+    def release(self):
+        if self._th and self._th.is_alive():
+            self._stop_th = True
+            self._th.join()
         self._cap.release()
 
-
-class VideoCaptureHandler:
-
-    def __init__(self,
-                 source: Source,
-                 api_pref: int=cv2.CAP_ANY,
-                 maxsize: int=10) -> None:
-        self._cap = VideoCapture(source, api_pref)
-        self._buf = PushQueue(maxsize)
-        self._task = VideoCaptureTask(self._cap, self._buf)
-
-    def change_source(self,
-                      source: Source,
-                      api_pref: int=cv2.CAP_ANY) -> None:
-        self._cap.open(source, api_pref)
-
-    def change_maxsize(self, maxsize: int) -> None:
-        self._buf.maxsize = maxsize
-
-    def start_capturing(self) -> None:
-        try:
-            self._task.start()
-        except TaskError:
-            logger.warning(
-                'Video capture thread is already running.')
-
-    def stop_capturing(self) -> None:
-        try:
-            self._task.stop()
-        except TaskError:
-            logger.warning(
-                'Video capture thread is not running.')
-
-    def read_frame(self, timeout: float=30.0) -> np.ndarray:
-        try:
+    def fetch_frame(self, timeout: float=10.0) -> np.ndarray:
+        with self.mutex:
             frame = self._buf.get(timeout)
             return frame
-        except:
-            logger.warning(
-                'Failed to read frame.')
+
+    def alter_maxsize(self, maxsize: int):
+        self._buf.maxsize = maxsize

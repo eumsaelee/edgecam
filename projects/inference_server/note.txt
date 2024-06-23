@@ -1,0 +1,16 @@
+(processing server)
+receiver - processor - sender
+
+(inference server with ai)
+receiver - model - sender
+
+(inference server with vision ai)
+image receiver - model - sender
+
+(inference server with vision ai to process real-time video stream)
+video stream receiver - model - sender
+
+# in implementation step ...
+rtsp - video capture - object detection model - output sender - websocket
+                     - pose estimation model - output sender - websocket
+

@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 # Author: Seunghyeon Kim
+#
+# NOTE: DO NOT USE THIS MODULE. IT WILL BE DEPRECATED!
+
 
 import abc
 import asyncio

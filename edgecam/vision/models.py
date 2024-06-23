@@ -32,8 +32,8 @@ class PytorchModel(abc.ABC):
 
 class Yolov8(PytorchModel):
 
-    def __init__(self, model_name: str="yolov8m.pt") -> None:
-        super().__init__(ultralytics.YOLO(model_name))
+    def __init__(self, model_pt: str="yolov8m.pt") -> None:
+        super().__init__(ultralytics.YOLO(model_pt))
 
     def predict(self, frame: np.ndarray) -> Preds:
         """ 이미지에서 객체를 탐지하고 결과를 딕셔너리 형태로 반환한다.
@@ -56,7 +56,7 @@ class Yolov8(PytorchModel):
 
         매개변수
         ------
-        frame (np.ndarray): 프레임 이미지.
+        frame (np.ndarray): 프레임 이미지
 
         반환값
         ----
@@ -72,8 +72,8 @@ class Yolov8(PytorchModel):
 
 class Yolov8Pose(PytorchModel):
 
-    def __init__(self, model_name: str='yolov8m-pose.pt'):
-        super().__init__(ultralytics.YOLO(model_name))
+    def __init__(self, model_pt: str='yolov8m-pose.pt'):
+        super().__init__(ultralytics.YOLO(model_pt))
 
     def predict(self, frame: np.ndarray) -> Preds:
         """ 이미지에서 사람의 자세를 추정하고 결과를 딕셔너리 형태로 반환한다.
@@ -130,7 +130,7 @@ class Yolov8Pose(PytorchModel):
 
         매개변수
         ------
-        frame (np.ndarray): 프레임 이미지.
+        frame (np.ndarray): 프레임 이미지
 
         반환값
         -----
