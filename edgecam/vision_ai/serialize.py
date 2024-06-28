@@ -6,7 +6,7 @@ import typing
 import cv2
 import numpy as np
 
-from edgecam.vision.payload import Payload
+from edgecam.vision_ai.payload import Payload
 
 
 Frame = np.ndarray

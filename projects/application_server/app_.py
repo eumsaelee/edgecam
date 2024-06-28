@@ -12,11 +12,9 @@ from dataclasses import dataclass
 import cv2
 from loguru import logger
 from fastapi import FastAPI
-from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
 from fastapi.requests import Request
-from fastapi.responses import RedirectResponse
 from fastapi.websockets import WebSocket, WebSocketDisconnect
+from fastapi.templating import Jinja2Templates
 from contextlib import asynccontextmanager
 
 from src.receiver import Receiver
@@ -27,13 +25,13 @@ from edgecam.vision_ai.yolo.labels import yolo_categories_kor
 
 @dataclass
 class DetectionReceiverProps:
-    websocket_uri: str='ws://172.27.1.11:8000/inference/det'
+    websocket_uri: str='ws://127.0.0.1:8000/inference/det'
     maxsize: int=5
 
 
 @dataclass
 class EstimationReceiverProps:
-    websocket_uri: str='ws://172.27.1.11:8000/inference/est'
+    websocket_uri: str='ws://127.0.0.1:8000/inference/est'
     maxsize: int=5
 
 
@@ -89,39 +87,13 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
-app.mount('/static', StaticFiles(directory='static'), name='static')
 templates = Jinja2Templates(directory='templates')
 font = NanumGothic.bold.value
-
-
-@app.get('/')
-async def read_root():
-    return RedirectResponse(url='/home')
-
-
-@app.get('/home')
-async def home(request: Request):
-    return templates.TemplateResponse('home.html', {'request': request})
-
-
-@app.get('/item0')
-async def item0(request: Request):
-    return templates.TemplateResponse('pages/item0.html', {'request': request})
-
-
-@app.get('/item1')
-async def item1(request: Request):
-    return templates.TemplateResponse('pages/item1.html', {'request': request})
 
 
 @app.get('/preview')
 async def preview(request: Request):
     return templates.TemplateResponse('preview.html', {'request': request})
-
-
-# @app.get('/update/var')
-# async def update(request: Request):
-#     return templates.TemplateResponse('req_update.html', {'request': request})
 
 
 DRAW = {'boxes': False}
@@ -174,3 +146,8 @@ async def send_frame(websocket: WebSocket):
         frame = numpy_to_bytes(frame, '.jpg')
         await websocket.send_bytes(frame)
         await asyncio.sleep(0)
+
+
+# @app.get('/update/var')
+# async def update(request: Request):
+#     return templates.TemplateResponse('req_update.html', {'request': request})

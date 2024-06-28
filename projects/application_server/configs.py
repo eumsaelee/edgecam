@@ -12,7 +12,7 @@ from pathlib import Path
 EDGECAM_DIR = str(Path(__file__).parents[2].absolute())
 sys.path.append(EDGECAM_DIR)
 
-from edgecam.vision.models import Yolov8, Yolov8Pose
+# from edgecam.vision.yolo.models import DetYOLO, EstYOLO
 
 
 # --------------
@@ -25,7 +25,7 @@ BASE_DIR = str(Path(__file__).parent.absolute())
 #
 # 트루타입 폰트들이 저장된 디렉토리. pillow를 이용해 이미지에 한글을 표시
 # 할 때 한글 지원 폰트가 필요하다.
-FONTS_DIR = os.path.join(BASE_DIR, 'resources/fonts')
+FONTS_DIR = os.path.join(BASE_DIR, 'static/fonts')
 
 
 # -------------------
@@ -33,21 +33,21 @@ FONTS_DIR = os.path.join(BASE_DIR, 'resources/fonts')
 # -------------------
 #
 # 서비스 가능한 모델의 이름과 참조 타입을 추가
-MODELS = {
-    'yolov8': Yolov8,
-    'yolov8-pose': Yolov8Pose,}
+# MODELS = {
+#     'yolov8': DetYOLO,
+#     'yolov8-pose': EstYOLO,}
 #
 # 서비스 가능한 모델이 사용할 가중치 파일 목록을 담은 사전 객체. 마찬가지로
 # 새로운 모델을 추가하였다면, 이 항목에서 추가해 주어야 한다.
-MODELS_WEIGHTS = {
-    'yolov8': ['yolov8n.pt',
-               'yolov8s.pt',
-               'yolov8m.pt',
-               'yolov8l.pt',
-               'yolov8x.pt'],
-    'yolov8-pose': ['yolov8n-pose.pt',
-                    'yolov8s-pose.pt',
-                    'yolov8m-pose.pt',
-                    'yolov8l-pose.pt',
-                    'yolov8x-pose.pt'],
-}
+# MODELS_WEIGHTS = {
+#     'yolov8': ['yolov8n.pt',
+#                'yolov8s.pt',
+#                'yolov8m.pt',
+#                'yolov8l.pt',
+#                'yolov8x.pt'],
+#     'yolov8-pose': ['yolov8n-pose.pt',
+#                     'yolov8s-pose.pt',
+#                     'yolov8m-pose.pt',
+#                     'yolov8l-pose.pt',
+#                     'yolov8x-pose.pt'],
+# }

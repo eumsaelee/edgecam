@@ -13,7 +13,7 @@ import numpy as np
 from loguru import logger
 
 from edgecam.utils.buffers import AsyncPushQueue
-from edgecam.vision.serialize import deserialize
+from edgecam.vision_ai.serialize import deserialize
 
 
 Frame = np.ndarray

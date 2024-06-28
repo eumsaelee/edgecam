@@ -17,7 +17,7 @@ from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 
 from src.capture import VideoCapture
 from src.inference import Inference, ObjectDetectorYolov8, PoseEstimatorYolov8
-from edgecam.vision.serialize import serialize
+from edgecam.vision_ai.serialize import serialize
 
 
 @dataclass
@@ -30,22 +30,25 @@ class CaptureProps:
 @dataclass
 class DetectorProps:
     model_pt: str='yolov8m.pt'
+    # model_pt: str='safety-equipment-yolov8n.pt'
     maxsize: int=5
+    tracking: bool=True
 
 
-@dataclass
-class EstimatorProps:
-    model_pt: str='yolov8m-pose.pt'
-    maxsize: int=5
+# @dataclass
+# class EstimatorProps:
+#     model_pt: str='yolov8m-pose.pt'
+#     maxsize: int=5
+#     tracking: bool=False
 
 
 CAP_PROP = CaptureProps()
 DET_PROP = DetectorProps()
-EST_PROP = EstimatorProps()
+# EST_PROP = EstimatorProps()
 
 CAP = None
 DET = None
-EST = None
+# EST = None
 
 
 def init_cap() -> None:
@@ -56,21 +59,25 @@ def init_cap() -> None:
 
 def init_det() -> None:
     global DET
-    DET = ObjectDetectorYolov8(DET_PROP.model_pt, DET_PROP.maxsize)
+    DET = ObjectDetectorYolov8(DET_PROP.model_pt,
+                               DET_PROP.maxsize,
+                               DET_PROP.tracking)
     DET.inference(CAP.fetch_frame)
 
 
-def init_est() -> None:
-    global EST
-    EST = PoseEstimatorYolov8(EST_PROP.model_pt, EST_PROP.maxsize)
-    EST.inference(CAP.fetch_frame)
+# def init_est() -> None:
+#     global EST
+    # EST = PoseEstimatorYolov8(EST_PROP.model_pt,
+    #                           EST_PROP.maxsize,
+    #                           EST_PROP.tracking)
+#     EST.inference(CAP.fetch_frame)
 
 
 def start_server() -> None:
     logger.info('Starting the inference server ...')
     init_cap()
     init_det()
-    init_est()
+    # init_est()
     logger.info('The inference server has started.')
     logger.info('Waiting for requests ...')
 
@@ -78,7 +85,7 @@ def start_server() -> None:
 def stop_server() -> None:
     logger.info('Stopping the inference server ...')
     DET.release()
-    EST.release()
+    # EST.release()
     CAP.release()
     logger.info('The inference server has stopped.')
 
@@ -93,7 +100,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=['http://127.0.0.1:8001'],
+    allow_origins=['http://127.0.0.1:8888', 'http://172.27.1.11:8888'],
     allow_credentials=True,
     allow_methods=['*'],
     allow_headers=['*']
@@ -138,6 +145,6 @@ async def websocket_endpoint_det(websocket: WebSocket):
     await websocket_endpoint(websocket, DET)
 
 
-@app.websocket('/inference/est')
-async def websocket_endpoint_det(websocket: WebSocket):
-    await websocket_endpoint(websocket, EST)
+# @app.websocket('/inference/est')
+# async def websocket_endpoint_det(websocket: WebSocket):
+#     await websocket_endpoint(websocket, EST)
