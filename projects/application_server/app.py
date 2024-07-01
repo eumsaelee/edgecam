@@ -21,8 +21,8 @@ from contextlib import asynccontextmanager
 
 from src.receiver import Receiver
 from src.visualize import NanumGothic, plot_text
-from edgecam.vision_ai.serialize import numpy_to_bytes
-from edgecam.vision_ai.yolo.labels import yolo_categories_kor
+from edgecam.serialize import numpy_to_bytes
+from edgecam.vision.yolo.labels import yolo_categories_kor
 
 
 @dataclass
@@ -31,17 +31,8 @@ class DetectionReceiverProps:
     maxsize: int=5
 
 
-@dataclass
-class EstimationReceiverProps:
-    websocket_uri: str='ws://172.27.1.11:8000/inference/est'
-    maxsize: int=5
-
-
 DETRCV_PROP = DetectionReceiverProps()
-ESTRCV_PROP = EstimationReceiverProps()
-
 DETRCV = None
-ESTRCV = None
 
 
 async def init_detrcv():
@@ -50,26 +41,16 @@ async def init_detrcv():
     await DETRCV.connect()
 
 
-async def init_estrcv():
-    global ESTRCV
-    ESTRCV = Receiver(ESTRCV_PROP.websocket_uri, ESTRCV_PROP.maxsize)
-    await ESTRCV.connect()
-
-
 async def startup():
     logger.info('Starting the application server ...')
-    # await _init_reception_handler()
     await init_detrcv()
-    await init_estrcv()
     logger.info('The application server has started.')
     logger.info('Waiting for requests ...')
 
 
 async def shutdown():
     logger.info('Stopping the application server ...')
-    # await RECEPTION_HANDLER.stop_detection()
     await DETRCV.disconnect()
-    await ESTRCV.disconnect()
     logger.info('The application server has stopped.')
 
 
@@ -78,14 +59,6 @@ async def lifespan(app: FastAPI):
     await startup()
     yield
     await shutdown()
-
-
-# ????
-# async def _init_reception_handler() -> None:
-#     global RECEPTION_HANDLER
-#     RECEPTION_HANDLER = DetectionHandler(OBJECT_DETECTION_URI,
-#                                          RECEPTION_BUFFER_SIZE)
-#     await RECEPTION_HANDLER.start_detection()
 
 
 app = FastAPI(lifespan=lifespan)

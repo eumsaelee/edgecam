@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
 # Author: Seunghyeon Kim
 
+
 class StepSkipper:
 
-    def __init__(self, stepsize: int) -> None:
+    def __init__(self, stepsize: int):
         self._stepsize = self._inspect(stepsize)
         self._pos = -1
 
@@ -21,7 +22,7 @@ class StepSkipper:
         return self._stepsize
 
     @stepsize.setter
-    def stepsize(self, stepsize: int) -> None:
+    def stepsize(self, stepsize: int):
         self._stepsize = self._inspect(stepsize)
 
     @staticmethod
@@ -29,4 +30,4 @@ class StepSkipper:
         if isinstance(stepsize, int) and stepsize > 1:
             return stepsize
         raise ValueError(
-            f'`stepsize` must be a positive interger greater than 1.')
+            f'The stepsize must be a positive interger greater than 1.')

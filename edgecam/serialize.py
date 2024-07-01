@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 # Author: Seunghyeon Kim
 
+
 import typing
 
 import cv2
 import numpy as np
 
-from edgecam.vision_ai.payload import Payload
+from edgecam.payload import Payload
 
 
 Frame = np.ndarray

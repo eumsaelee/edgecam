@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # Author: Seunghyeon Kim
 
+
 yolo_categories_eng = {
     0: 'person',
     1: 'bicycle',

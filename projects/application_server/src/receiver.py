@@ -12,8 +12,8 @@ import websockets
 import numpy as np
 from loguru import logger
 
-from edgecam.utils.buffers import AsyncPushQueue
-from edgecam.vision_ai.serialize import deserialize
+from edgecam.buffers import AsyncEvectingQueue
+from edgecam.serialize import deserialize
 
 
 Frame = np.ndarray
@@ -25,7 +25,7 @@ class Receiver:
 
     def __init__(self, websocket_uri: str, maxsize: int=1):
         self._uri = websocket_uri
-        self._buf = AsyncPushQueue(maxsize)
+        self._buf = AsyncEvectingQueue(maxsize)
         self._task: asyncio.Task=None
         self._stop_task = False
 
@@ -43,7 +43,7 @@ class Receiver:
                             'result is not a type of bytes.')
                         continue
                     frame, preds = deserialize(result)
-                    await self._buf.push((frame, preds))
+                    await self._buf.put((frame, preds))
             except:
                 logger.exception('Aborted.')
             finally:
@@ -61,66 +61,3 @@ class Receiver:
 
     async def alter_maxsize(self, maxsize: int):
         await self._buf.set_maxsize(maxsize)
-
-
-"""
-class DetectionTask(SingleAsyncTask):
-
-    def __init__(self, uri: str, buf: AsyncPushQueue):
-        self._uri = uri
-        self._buf = buf
-        super().__init__()
-
-    async def _start(self) -> None:
-        async with websockets.connect(self._uri) as ws:
-            try:
-                while not self._stop_task:
-                    output = await ws.recv()
-                    if not isinstance(output, bytes):
-                        logger.warning(
-                            '`output` is not a type of bytes.')
-                        continue
-                    frame, preds = deserialize(output)
-                    await self._buf.push((frame, preds))
-            except:
-                logger.exception('Task has been aborted.')
-            finally:
-                if not self._stop_task:
-                    self._stop_task = True
-                    await self._stop()
-
-    async def _stop(self) -> None:
-        pass
-
-
-class DetectionHandler:
-
-    def __init__(self, uri: str, maxsize: int=10) -> None:
-        self._buf = AsyncPushQueue(maxsize)
-        self._task = DetectionTask(uri, self._buf)
-
-    async def change_maxsize(self, maxsize: int) -> None:
-        await self._buf.set_maxsize(maxsize)
-
-    async def start_detection(self) -> None:
-        try:
-            await self._task.start()
-        except TaskError:
-            logger.exception(
-                'Detection task already running.')
-
-    async def stop_detection(self) -> None:
-        try:
-            await self._task.stop()
-        except TaskError:
-            logger.exception(
-                'Detection task is not running.')
-
-    async def read_output(self, timeout: float=30.0) -> Output:
-        try:
-            output = await self._buf.get(timeout)
-            return output
-        except:
-            logger.warning(
-                'Failed to read output.')
-"""
