@@ -3,6 +3,21 @@
 
 
 class StepSkipper:
+    """ 반복문에서 매 단위 간격마다 작업 스킵(건너뜀) 여부를 판단하는 클래스.
+
+    단위 간격 크기(stepsize)를 기준으로 첫 사이클을 제외한 나머지를 모두 스킵한다.
+
+    >>> skipper = StepSkipper(stepsize=3)
+    >>> for i in range(10):
+    ...    is_skip = next(skipper)
+    ...    print(is_skip, end=' ')
+    ...
+    False True True False True True False True True False
+
+    위와 같이 단위 간격 크기가 3일 때, 사이클 3회마다 첫 사이클은 스킵하지 않도록
+    만들 수 있다. 단위 간격 크기는 반드시 1보다 큰 양의 정수이어야 하고, 런타임에
+    동적으로 변경할 수 있다.
+    """
 
     def __init__(self, stepsize: int):
         self._stepsize = self._inspect(stepsize)

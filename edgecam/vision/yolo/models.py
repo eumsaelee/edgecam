@@ -16,9 +16,13 @@ Results = Dict[str, np.ndarray]
 
 class Yolo:
 
-    def __init__(self, pt: str='yolov8n.pt', tracking: bool=False):
-        self._model = ultralytics.YOLO(pt)
+    def __init__(self):
+        self._model = None
         self._infer = None
+        self.tracking = False
+
+    def load(self, pt: str='yolov8n.pt', tracking: bool=False):
+        self._model = ultralytics.YOLO(pt)
         self.tracking = tracking
 
     @property
@@ -52,8 +56,8 @@ class Yolo:
 
 class YoloPose(Yolo):
 
-    def __init__(self, pt: str='yolov8n-pose.pt', tracking: bool=False):
-        super().__init__(pt, tracking)
+    def load(self, pt: str='yolov8n-pose.pt', tracking: bool=False):
+        self.load(pt, tracking)
     
     def infer(self, input: Image) -> Results:
         out = self._infer(input)

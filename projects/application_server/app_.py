@@ -1,9 +1,12 @@
 # -*- coding: utf-8 -*-
 # Author: Seunghyeon Kim
 
+import sys
+from configs import EDGECAM_DIR
+sys.path.append(EDGECAM_DIR)
+
 import json
 import asyncio
-from typing import Callable, Any
 from dataclasses import dataclass
 
 import cv2
@@ -16,83 +19,46 @@ from fastapi.responses import RedirectResponse
 from fastapi.websockets import WebSocket, WebSocketDisconnect
 from contextlib import asynccontextmanager
 
-from edgecam.readers import WebsocketReader
-from edgecam.buffers import AsyncEvectingQueue
-from edgecam.tasks import SingleAsyncTask
-
+from src.receiver import Receiver
 from src.visualize import NanumGothic, plot_text
-from edgecam.serialize import numpy_to_bytes, deserialize
+from edgecam.serialize import numpy_to_bytes
 from edgecam.vision.yolo.labels import yolo_categories_kor
 
 
-class BufferChainer(SingleAsyncTask):
-
-    def __init__(self, src: Any, dst: Any):
-        """ Initialization.
-        Args:
-            src (Any): An object with a get() method that includes a timeout option.
-            dst (Any): An object with a put() method that includes an auto-evicting mechanism like an EvectingQueue.
-        """
-        self._src = src
-        self._dst = dst
-        super().__init__()
-
-    async def start(self, hooker: Callable[[Any], Any], timeout: float=30.0):
-        """ Start chaining.
-        Args:
-            hooker (Callable): A function to preprocess the frame image from the src.
-            timeout (float): Timeout for the get() method of the src.
-        """
-        async def target():
-            data = hooker(await self._src.get(timeout))
-            data = hooker(data)
-            data = deserialize(data)
-            await self._dst.put(data)
-        await super().start(target)
-
-
-class DataReader(WebsocketReader):
-
-    async def get(self, timeout: Any=None) -> Any:
-        # Duck typing.
-        return await self.read()
-
-
 @dataclass
-class Configs:
-    source: str='ws://172.27.1.11:8000/inference/det'
+class DetectionReceiverProps:
+    websocket_uri: str='ws://172.27.1.11:8000/inference/det'
     maxsize: int=5
-    timeout: float=10.0
 
 
-CONFIGS = Configs()
-
-#READER = DataReader(CONFIGS.source)
-READER = DataReader()
-READER_BUFFER = AsyncEvectingQueue(CONFIGS.maxsize)
-READER_CHAINER = BufferChainer(READER, READER_BUFFER)
+DETRCV_PROP = DetectionReceiverProps()
+DETRCV = None
 
 
-async def start_server():
+async def init_detrcv():
+    global DETRCV
+    DETRCV = Receiver(DETRCV_PROP.websocket_uri, DETRCV_PROP.maxsize)
+    await DETRCV.connect()
+
+
+async def startup():
     logger.info('Starting the application server ...')
-    await READER.open(CONFIGS.source)
-    await READER_CHAINER.start(lambda x: x, CONFIGS.timeout)
+    await init_detrcv()
     logger.info('The application server has started.')
     logger.info('Waiting for requests ...')
 
 
-async def stop_server():
+async def shutdown():
     logger.info('Stopping the application server ...')
-    await READER_CHAINER.stop()
-    await READER.close()
+    await DETRCV.disconnect()
     logger.info('The application server has stopped.')
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    await start_server()
+    await startup()
     yield
-    await stop_server()
+    await shutdown()
 
 
 app = FastAPI(lifespan=lifespan)
@@ -156,19 +122,19 @@ async def recv_ctrls(websocket: WebSocket):
 
 
 # NOTE Temp
-# EQUIPMENT = {
-#     0: '귀덮개',
-#     1: '장갑',
-#     2: '안전모',
-#     3: '안전화',
-#     4: '안전대',
-#     5: '안전마스크'
-# }
+EQUIPMENT = {
+    0: '귀덮개',
+    1: '장갑',
+    2: '안전모',
+    3: '안전화',
+    4: '안전대',
+    5: '안전마스크'
+}
 
 
 async def send_frame(websocket: WebSocket):
     while True:
-        frame, preds = await READER_BUFFER.get(CONFIGS.timeout)
+        frame, preds = await DETRCV.fetch_result()
         if DRAW['boxes']:
             boxes = preds['boxes']
             for box in boxes:

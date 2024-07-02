@@ -66,6 +66,7 @@ class SingleAsyncTask:
         try:
             while not self._stop_task:
                 await target(*args)
+                await asyncio.sleep(0)
         except Exception as e:
             raise RuntimeError from e
         finally:

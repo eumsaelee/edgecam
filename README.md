@@ -1,1 +1,2 @@
-edgecam
+# Edgecam
+pip3 install -e .
