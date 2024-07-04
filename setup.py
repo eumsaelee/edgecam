@@ -8,7 +8,7 @@ setup(
     description='',
     long_description=open('README.md').read(),
     long_description_content_type='text/markdown',
-    packages=find_packages(include=['edgecam.*']),
+    packages=find_packages(include=['edgecam', 'edgecam.*']),
     install_requires=[],
     classifiers=[],
     python_requires='>=3.8',
